@@ -141,7 +141,7 @@ def trigger_request(url:str):
     return data
 
 
-def get_pm25(aqicn_url: str, country: str, city: str, street: str, day: datetime.date, AQI_API_KEY: str):
+def get_pm25(aqicn_url: str, city: str, day: datetime.date, AQI_API_KEY: str):
     """
     Returns DataFrame with air quality (pm25) as dataframe
     """
@@ -151,16 +151,6 @@ def get_pm25(aqicn_url: str, country: str, city: str, street: str, day: datetime
     # Make a GET request to fetch the data from the API
     data = trigger_request(url)
 
-    # if we get 'Unknown station' response then retry with city in url
-    if data['data'] == "Unknown station":
-        url1 = f"https://api.waqi.info/feed/{country}/{street}/?token={AQI_API_KEY}"
-        data = trigger_request(url1)
-
-    if data['data'] == "Unknown station":
-        url2 = f"https://api.waqi.info/feed/{country}/{city}/{street}/?token={AQI_API_KEY}"
-        data = trigger_request(url2)
-
-
     # Check if the API response contains the data
     if data['status'] == 'ok':
         # Extract the air quality data
@@ -169,9 +159,7 @@ def get_pm25(aqicn_url: str, country: str, city: str, street: str, day: datetime
         aq_today_df['pm25'] = [aqi_data['iaqi'].get('pm25', {}).get('v', None)]
         aq_today_df['pm25'] = aq_today_df['pm25'].astype('float32')
 
-        aq_today_df['country'] = country
         aq_today_df['city'] = city
-        aq_today_df['street'] = street
         aq_today_df['date'] = day
         aq_today_df['date'] = pd.to_datetime(aq_today_df['date'])
         aq_today_df['url'] = aqicn_url
@@ -182,7 +170,7 @@ def get_pm25(aqicn_url: str, country: str, city: str, street: str, day: datetime
     return aq_today_df
 
 
-def plot_air_quality_forecast(city: str, street: str, df: pd.DataFrame, file_path: str, hindcast=False):
+def plot_air_quality_forecast(city: str, df: pd.DataFrame, file_path: str, hindcast=False):
     fig, ax = plt.subplots(figsize=(10, 6))
 
     day = pd.to_datetime(df['date']).dt.date
@@ -197,7 +185,7 @@ def plot_air_quality_forecast(city: str, street: str, df: pd.DataFrame, file_pat
 
     # Set the labels and title
     ax.set_xlabel('Date')
-    ax.set_title(f"PM2.5 Predicted (Logarithmic Scale) for {city}, {street}")
+    ax.set_title(f"PM2.5 Predicted (Logarithmic Scale) for {city}")
     ax.set_ylabel('PM2.5')
 
     colors = ['green', 'yellow', 'orange', 'red', 'purple', 'darkred']
@@ -287,14 +275,39 @@ def check_file_path(file_path):
     else:
         print(f"File successfully found at the path: {file_path}")
 
-def backfill_predictions_for_monitoring(weather_fg, air_quality_df, monitor_fg, model):
+def backfill_predictions_for_monitoring(weather_fg, air_quality_df, monitor_fg, models, city_dict):
     features_df = weather_fg.read()
-    features_df = features_df.sort_values(by=['date'], ascending=True)
-    features_df = features_df.tail(10)
-    features_df['predicted_pm25'] = model.predict(features_df[['temperature_2m_mean', 'precipitation_sum', 'wind_speed_10m_max', 'wind_direction_10m_dominant']])
-    df = pd.merge(features_df, air_quality_df[['date','pm25','street','country']], on="date")
-    df['days_before_forecast_day'] = 1
-    hindcast_df = df
-    df = df.drop('pm25', axis=1)
-    monitor_fg.insert(df, write_options={"wait_for_job": True})
+    features_df = features_df.sort_values(by=["city", "date"], ascending=True)
+    features_df = features_df.groupby("city", group_keys=False).apply(lambda g: g.tail(17).head(10))
+
+    feature_cols = [
+        "temperature_2m_mean",
+        "precipitation_sum",
+        "wind_speed_10m_max",
+        "wind_direction_10m_dominant",
+    ]
+    
+    # Make city-specific predictions with the right model
+    for city in city_dict:
+        mask = features_df["city"] == city
+        X_city = features_df.loc[mask, feature_cols]
+
+        y_pred = models[city].predict(X_city)
+        features_df.loc[mask, "predicted_pm25"] = y_pred
+
+    df = pd.merge(
+        features_df,
+        air_quality_df[["city", "date", "pm25"]],
+        on=["city", "date"],
+        how="left",
+    )
+
+    df["days_before_forecast_day"] = 1.0
+
+    hindcast_df = df.copy()
+
+    df_to_insert = df.drop(columns=["pm25"])
+
+    monitor_fg.insert(df_to_insert, write_options={"wait_for_job": True})
+
     return hindcast_df
