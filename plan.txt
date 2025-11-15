@@ -1,0 +1,35 @@
+-- C-level --
+* Add 3 day lagged pm25 measurments
+* Add something else that improve performance
+* Keep the baseline model running
+* Train the updated model aswell
+
+Compare baseline and new model after training and the difference in upcoming predictions.
+
+
+-- A-level --
+Use: city as KEY, URL/API as VALUE
+
+* Create info.csv containing URL values for each city key
+
+nb1:
+* add pm25 data from all cities into same feature group, will use city as key later (including lagged data)
+* add weather data for each city into same feature group
+* Use only city and URL API for each station
+
+nb2:
+* Same principle as nb1
+
+nb3:
+* Train a separate model for each city, identified by the city.
+
+nb4:
+* Use each model for inference
+* Store nice graphics
+    * Same prediction graph as before
+    * Comparison of prediction
+    * Comparison of error/accuracy
+
+Also:
+* Add separate solutions for the stations with few observations
+* Keep baseline for one station
