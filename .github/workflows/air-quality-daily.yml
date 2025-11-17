@@ -2,8 +2,8 @@ name: air-quality-daily
 
 on:
   workflow_dispatch:
-    schedule:
-      - cron: '11 6 * * *'
+  schedule:
+    - cron: '11 6 * * *'
 
 jobs:
   schedule_pipelines:
@@ -12,6 +12,9 @@ jobs:
     permissions:
       pages: write
       contents: write
+
+    env:
+      CITIES: "bodo moirana"
 
     steps:
       - name: checkout repo content
@@ -30,8 +33,16 @@ jobs:
       - name: execute python workflows from bash script
         env:
           HOPSWORKS_API_KEY: ${{ secrets.HOPSWORKS_API_KEY }}
+          CITIES: ${{ env.CITIES }}
         run: |
-          make aq-inference
+          set -e
+          for CITY in $CITIES; do
+            echo "====================================="
+            echo "Running air quality inference for $CITY"
+            echo "====================================="
+            CITY=$CITY make aq-inference
+          done
+
       - name: github pages publish
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
