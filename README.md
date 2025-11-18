@@ -33,7 +33,7 @@ Feature importance for the model trained on Tromso.
 
 A high-quality forecast for the coming day hinges critically on having an accurate $\text{PM}_{2.5}$ measurement from the current day.
 
-Feature Importance: As seen in the feature importance (e.g., for the model trained on Tromsø), the $\text{PM}_{2.5}$ measurement from the previous day ($\text{lag}1$) is the single most dominant predictor, followed by lagged values and weather features.
+Feature Importance: As seen in the feature importance (e.g., for the model trained on Tromsø), the $\text{PM}_{2.5}$ measurement from the previous day lag1 is the single most dominant predictor, followed by lagged values and weather features.
 The Latency Problem: If the daily prediction workflow (air-quality-daily.yml) runs too early (e.g., in the morning), the $\text{PM}_{2.5}$ value fetched from the API for the current day will be an incomplete and often significantly underestimated daily average. Pollution events, such as traffic-related spikes during evening commutes, are missed.
 
 Mitigation Strategy: To ensure the most reliable forecast for tomorrow, the daily workflow should be scheduled to run late in the day (e.g., after the evening rush hour). If a prediction is required earlier, the model is designed to use the last complete prediction (which spans multiple days) until the late-day run completes.
@@ -44,6 +44,7 @@ For generating air quality predictions that extend more than one day into the fu
 Mechanism: The model's prediction for day $t$ is used as an input feature (the $\text{lag}1$ value) to generate the prediction for day $t+1$, which then predicts day $t+2$, and so on.
 
 Stability of XGBoost: Unlike linear time-series models (e.g., ARIMA) or certain neural networks that can experience explosive, unrealistic extrapolation when coefficients push values higher indefinitely, our XGBoost model remains stable:
+
     Rule-Based: XGBoost learns a series of rules from the finite training data and cannot invent rules that push values infinitely high.
 
     Weather Constraint: The inclusion of daily weather features also acts as a critical constraint, pushing the forecast toward plausible ranges based on external environmental factors.
