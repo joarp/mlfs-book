@@ -21,7 +21,7 @@ To keep everything clean and since we never have multiple sensors in each city f
 Feature importance for the model trained on Tromso.
 ![Feature importance](notebooks/airquality/air_quality_model/images/feature_importance_tromso.png)
 
-As can be seen in the image above, using the PM2.5 measurement from the previous day combined with weather features are the most important features for predicting PM2.5 the next day. Therefore the quality of the prediction for tomorrow will be dependant on the measure of PM2.5 today. A prediction late in the day will therefore preferred since the API will provide a more reliable average PM2.5 for the day. Predicting the coming day in the morning can be problematic since the daily average will most likely be a large underestimate of the actual average for that day. PM2.5 levels usually rise during commuting times if the sensor is located close to a road.
+As can be seen in the image above, using the PM2.5 measurement from the previous day combined with weather features are the most important features for predicting PM2.5 the next day. Therefore the quality of the prediction for tomorrow will be dependant on the measure of PM2.5 today. A prediction late in the day will therefore preferred since the API will provide a more reliable average PM2.5 for the day. Predicting the coming day in the morning can be problematic since the daily average will most likely be a large underestimate of the actual average for that day. As an example, PM2.5 levels usually rise during commuting times if the sensor is located close to a road.
 
 ## Autoregressive model for predictions > 1 day
 For predicting air quality for multiple days ahead we utilize an autoregressive framwork where the prediction for day t is dependendant on the prediction for day t-1.
@@ -39,7 +39,7 @@ To understand if the measurements were a consequence of a faulting sensor or som
 
 When measuring a PM2.5 value larger than 100 while not measuring any deviation from the median of the corresponding PM10 value for that date, it is highly likely not an observation of the actual PM2.5 value. Using a filter similar to above description we identify the following suspects for Tromso and also remove these.
 
-![Found outliers with the filter](notebooks/airquality/air_quality_model/images/after_oulier_filter.png)
+![Found outliers with the filter](notebooks/airquality/air_quality_model/images/after_outlier_filter.png)
 
 
 
