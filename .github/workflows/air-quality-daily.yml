@@ -3,7 +3,7 @@ name: air-quality-daily
 on:
   workflow_dispatch:
   schedule:
-    - cron: '40 9 * * *'
+    - cron: '00 17 * * *'
 
 jobs:
   schedule_pipelines:
@@ -14,7 +14,7 @@ jobs:
       contents: write
 
     env:
-      CITIES: "bodo moirana"
+      CITIES: "harstad tromso bodo moirana"
 
     steps:
       - name: checkout repo content

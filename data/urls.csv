@@ -1,3 +1,5 @@
 city,url,latitude,longitude
-bodo,https://api.waqi.info/feed/@12706,67.28, 14.38
-moirana,https://api.waqi.info/feed/@12698,66.33, 14.18
+bodo,https://api.waqi.info/feed/@12706,67.28,14.38
+moirana,https://api.waqi.info/feed/@12698,66.33,14.18
+harstad,https://api.waqi.info/feed/@12701,68.79,16.54
+tromso,https://api.waqi.info/feed/@2660,69.66,18.96

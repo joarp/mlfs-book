@@ -1,3 +1,31 @@
+[Dashboard for Air Quality Predictions](https://joarp.github.io/mlfs-book/air-quality/)
+
+# Project description
+This repo contains the code necessary for running the dashboard above. In the dashboard we show predictions for air quality in different cities.
+In the dashboard our improved model is also compared to the default model for one city.
+
+
+
+
+
+![Feature importance](notebooks/airquality/air_quality_model/images/feature_importance_tromso.png)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # mlfs-book
 O'Reilly book - Building Machine Learning Systems with a feature store: batch, real-time, and LLMs
 
