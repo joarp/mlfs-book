@@ -1,14 +1,45 @@
 [Dashboard for Air Quality Predictions](https://joarp.github.io/mlfs-book/air-quality/)
 
 # Project description
-This repo contains the code necessary for running the dashboard above. In the dashboard we show predictions for air quality in different cities.
-In the dashboard our improved model is also compared to the default model for one city.
+This repo contains the code necessary for running the dashboard above on a schedule. In the dashboard we show predictions for air quality in different cities for the coming day. In the dashboard our improved model is also compared to the default model for one city.
 
+## Hopsworks
+We use hopsworks as our feature store and for model storing.
 
+## Daily run workflow
+The air-quality-daily.yml file provide the logic for fetching daily data and running inference (prediction) of the coming days for all sensors. To be able to run the daily workflow (air-quality-daily.yml) there need to exist a feature group and a trained model for the particular sensor. This can be done by running aq-features and aq-train in a .yml file or running the notebooks manually. Do this when you add a new sensor or want to retrain the model on new data.
 
+## Improved model
+We have improved the model by adding the following features: lag1, lag2, lag3, and rolling mean of the lagged values. This gives a better prediction since PM2.5 today is highly correlated with PM2.5 yesterday. Pollution accumulates over time and PM2.5 does not suddenly disappear.
 
+## How predictions work
 
+## Parameters
+To keep everything clean and since we never have multiple sensors in each city for the areas we investigate we use city as the unique id for each station and loop through the city values in air-quality-daily.yml by passing the city parameter to the aq-inference runs of the notebooks. To better keep track of all variables for each city we insert url, longitude, and latitude to a specific csv file instead of passing these as parameters. This can however easily be modified.
+
+## Problems with predicting the next day
+Feature importance for the model trained on Tromso.
 ![Feature importance](notebooks/airquality/air_quality_model/images/feature_importance_tromso.png)
+
+As can be seen in the image above, using the PM2.5 measurement from the previous day combined with weather features are the most important features for predicting PM2.5 the next day. Therefore the quality of the prediction for tomorrow will be dependant on the measure of PM2.5 today. A prediction late in the day will therefore preferred since the API will provide a more reliable average PM2.5 for the day. Predicting the coming day in the morning can be problematic since the daily average will most likely be a large underestimate of the actual average for that day. PM2.5 levels usually rise during commuting times if the sensor is located close to a road.
+
+## Autoregressive model for predictions > 1 day
+For predicting air quality for multiple days ahead we utilize an autoregressive framwork where the prediction for day t is dependendant on the prediction for day t-1.
+
+Since we are using XGBoost we won't exptrapolate upward trends in the way an ARIMA model or NN would. This is because it learns rules and it will not have learnt rules that pushes values higher indefinitely. Weather features will also push the forecast down to plausible ranges.
+
+## Preprocessing to remove measurements due to sensor fault
+For all sensors except one, the measurements where relatively clean, but, for Tromso we identified suspect outliers abnormal for the scandinavian region. The image below show the suspect outlier:
+
+![Outliers](notebooks/airquality/air_quality_model/images/outliers.png)
+
+To understand if the measurements were a consequence of a faulting sensor or some actual abnormal behaviour e.g. due to a wildfire we used a filter to identify and remove outliers which very likely had been caused by a faulting sensor. For the Tromso station we had access to PM10 measurments and could compare if abnormalities also were found in the PM10 measurements, if not, the outliers are most probably due to a faulting sensor. Here we can see the corresponding PM10 measurements for the same outlier periods.
+
+![Outliers PM10](notebooks/airquality/air_quality_model/images/outliers_pm10.png)
+
+When measuring a PM2.5 value larger than 100 while not measuring any deviation from the median of the corresponding PM10 value for that date, it is highly likely not an observation of the actual PM2.5 value. Using a filter similar to above description we identify the following suspects for Tromso and also remove these.
+
+![Found outliers with the filter](notebooks/airquality/air_quality_model/images/after_oulier_filter.png)
 
 
 
