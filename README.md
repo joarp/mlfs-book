@@ -1,21 +1,31 @@
 [Dashboard for Air Quality Predictions](https://joarp.github.io/mlfs-book/air-quality/)
 
 # Project description
-This repo contains the code necessary for running the dashboard above on a schedule. In the dashboard we show predictions for air quality in different cities for the coming day. In the dashboard our improved model is also compared to the default model for one city.
+This repository contains the full code and infrastructure required to run a scheduled machine learning pipeline that forecasts air quality and renders a comparative dashboard.
+The purpose of this project is to provide daily air quality predictions (specifically for $\text{PM}_{2.5}$) for multiple target cities and to serve these results in a dynamic dashboard. A key feature of the dashboard is the side-by-side comparison of our improved machine learning model against a standard default model for a single city, demonstrating the value of advanced feature engineering.
 
 ## Hopsworks
 We use hopsworks as our feature store and for model storing.
 
 ## Daily run workflow
-The air-quality-daily.yml file provide the logic for fetching daily data and running inference (prediction) of the coming days for all sensors. To be able to run the daily workflow (air-quality-daily.yml) there need to exist a feature group and a trained model for the particular sensor. This can be done by running aq-features and aq-train in a .yml file or running the notebooks manually. Do this when you add a new sensor or want to retrain the model on new data.
 
+The pipeline is managed through a central automation file, air-quality-daily.yml.
+
+Trigger: The workflow runs on a daily schedule.
+
+Action: It fetches the latest data and executes the inference process (aq-inference) for all monitored cities/sensors.
+
+Parameterization: To keep runs clean, the city is used as the unique identifier. Instead of passing many parameters, station metadata (URL, longitude, latitude) is loaded from a specific CSV file to simplify the pipeline execution.
+
+Prerequisites for Daily Inference
+For the air-quality-daily.yml workflow to succeed, a Feature Group and a Trained Model must already exist for each city/sensor in Hopsworks.
+
+Setup: Run the aq-features and aq-train tasks (or the corresponding notebooks) when adding a new sensor or retraining the model on new data.
 ## Improved model
 We have improved the model by adding the following features: lag1, lag2, lag3, and rolling mean of the lagged values. This gives a better prediction since PM2.5 today is highly correlated with PM2.5 yesterday. Pollution accumulates over time and PM2.5 does not suddenly disappear.
 
 ## How predictions work
 
-## Parameters
-To keep everything clean and since we never have multiple sensors in each city for the areas we investigate we use city as the unique id for each station and loop through the city values in air-quality-daily.yml by passing the city parameter to the aq-inference runs of the notebooks. To better keep track of all variables for each city we insert url, longitude, and latitude to a specific csv file instead of passing these as parameters. This can however easily be modified.
 
 ## Problems with predicting the next day
 Feature importance for the model trained on Tromso.
